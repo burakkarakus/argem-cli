@@ -1,12 +1,13 @@
 {
   "name": "argem-cli1",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node .",
-    "build": "rollup ./index.js -c"
+    "build": "rollup ./index.js -c",
+    "deploy": "yarn build && yarn publish"
   },
   "bin": {
     "argem-cli": "./dist/index.js"
@@ -17,6 +18,7 @@
     "@inquirer/checkbox": "^1.3.5",
     "@inquirer/select": "^1.2.5",
     "axios": "^1.4.0",
+    "figlet": "^1.6.0",
     "inquirer": "^9.2.8"
   },
   "devDependencies": {
