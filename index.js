@@ -3,30 +3,26 @@
 import inquirer from "inquirer";
 import checkbox from "@inquirer/checkbox";
 import select from "@inquirer/select";
-
+import chalk from "chalk";
 import {
   doubleDigit,
   getDateString,
-  isAuthenticated,
-  persistToken,
-  purgeToken,
+  isAlreadyLogedIn,
+  persistData,
+  purgeData,
+  readData,
 } from "./helper.js";
 import ArgemService from "./Services/ArgemService.js";
 import figlet from "figlet";
 
 async function welcome() {
-  figlet("Argem   CLI", (_, msg) => {
-    console.log(msg);
-  });
+  console.log(figlet.textSync("Argem CLI ", { font: "Doom" }));
+  console.log("\n");
 
-  if (!isAuthenticated()) {
+  if (!isAlreadyLogedIn()) {
     await loginPrompt();
   }
   const { timesheet, selectedDates } = await timeTablePropmt();
-
-  if (!timesheet.length)
-    return console.log("Eksik gününüz bulunmamaktadır 🎉🎉🎉");
-  if (!selectedDates.length) return console.log("Hiçbir tarih seçmediniz!");
 
   const selectedActivity = await activityPropmpt();
 
@@ -59,7 +55,32 @@ async function loginPrompt() {
     headers,
   } = await ArgemService.login(email, password);
 
-  persistToken({ token, Cookie: headers["set-cookie"]?.join(";") });
+  persistData({
+    token,
+    Cookie: headers["set-cookie"]?.join(";"),
+    email,
+    password,
+  });
+  ArgemService.init();
+}
+
+async function reloginPrompt() {
+  console.log("Tekrardan giriş yapılıyor");
+  const { email, password } = readData();
+  purgeData();
+  ArgemService.init();
+
+  const {
+    data: { token },
+    headers,
+  } = await ArgemService.login(email, password);
+
+  persistData({
+    token,
+    Cookie: headers["set-cookie"]?.join(";"),
+    email,
+    password,
+  });
   ArgemService.init();
 }
 
@@ -72,27 +93,32 @@ async function timeTablePropmt() {
     timesheet = data?.filter((day, index) => !day.completed && index < 100);
   } catch (error) {
     if (error.response.status === 401) {
-      purgeToken();
-      await loginPrompt();
-      timesheet = null;
-      const {
-        data: { data },
-      } = await ArgemService.getTimeTable();
-      timesheet = data?.filter((day, index) => !day.completed && index < 100);
+      await reloginPrompt();
+      return await timeTablePropmt();
     }
   }
 
   if (!timesheet?.length) {
-    return { timesheet, selectedDates: null };
+    console.log(chalk.greenBright("Eksik gününüz bulunmamaktadır 🎉🎉🎉\n"));
+    process.exit(0);
   }
 
-  const selectedDates = await checkbox({
-    message: "Doldurmak istediğiniz günleri seçiniz: ",
-    choices: timesheet.map((sheet) => ({
-      name: getDateString(sheet.date),
-      value: sheet.id,
-    })),
-  });
+  let selectedDates = null;
+
+  while (!selectedDates?.length) {
+    selectedDates = await checkbox({
+      message: "Doldurmak istediğiniz günleri seçiniz: ",
+      choices: timesheet.map((sheet) => ({
+        name: getDateString(sheet.date),
+        value: sheet.id,
+      })),
+    });
+    if (!selectedDates.length) {
+      process.stdout.moveCursor(0, -1); // up one line
+      process.stdout.clearLine(1); // from cursor to end
+      console.log(chalk.redBright("Hiçbir tarih seçmediniz!"));
+    }
+  }
 
   return { timesheet, selectedDates };
 }
@@ -138,9 +164,11 @@ async function enterWorkLogPropmt(timesheets, dates, activity, project) {
 
     await ArgemService.enterWorklog(id, activity, project, total_time);
     console.log(
-      `${getDateString(
-        timesheet.date
-      )} mesai girişi tamamlandı. Girilen toplam mesai süresi: ${total_time}`
+      chalk.greenBright(
+        `${getDateString(
+          timesheet.date
+        )} günü için mesai girişi tamamlandı. Girilen toplam mesai süresi: ${total_time}`
+      )
     );
   });
 }

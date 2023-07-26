@@ -4,7 +4,7 @@ import os from "os";
 const FOLDER_PATH = `${os.homedir()}/.argem`;
 const FILE_NAME = `token.json`;
 
-export function isAuthenticated() {
+export function isAlreadyLogedIn() {
   if (!fs.existsSync(`${FOLDER_PATH}/${FILE_NAME}`)) {
     return false;
   }
@@ -14,25 +14,25 @@ export function isAuthenticated() {
       encoding: "utf8",
       flag: "r",
     });
-    const { token } = JSON.parse(data);
-    return !!token;
+    const { token, email, Cookie } = JSON.parse(data);
+    return !!token && !!email && !!Cookie;
   } catch (error) {
     return false;
   }
 }
 
-export function persistToken(data) {
+export function persistData(data) {
   fs.mkdirSync(FOLDER_PATH, { recursive: true });
   fs.writeFileSync(`${FOLDER_PATH}/${FILE_NAME}`, JSON.stringify({}));
 
   fs.writeFileSync(`${FOLDER_PATH}/${FILE_NAME}`, JSON.stringify(data));
 }
 
-export function purgeToken() {
+export function purgeData() {
   fs.unlinkSync(`${FOLDER_PATH}/${FILE_NAME}`);
 }
 
-export function readToken() {
+export function readData() {
   try {
     const file = fs.readFileSync(`${FOLDER_PATH}/${FILE_NAME}`, {
       encoding: "utf8",

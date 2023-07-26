@@ -1,5 +1,5 @@
 import axios from "axios";
-import { readToken } from "../helper.js";
+import { readData } from "../helper.js";
 
 class ArgemService {
   constructor() {
@@ -8,7 +8,8 @@ class ArgemService {
   }
 
   init = () => {
-    const data = readToken();
+    const data = readData();
+    this.instance = null;
 
     this.instance = axios.create({
       headers: {
