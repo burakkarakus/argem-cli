@@ -4,31 +4,31 @@ import inquirer from "inquirer";
 import checkbox from "@inquirer/checkbox";
 import select from "@inquirer/select";
 import chalk from "chalk";
+import ArgemService from "./service.js";
+import figlet from "figlet";
 import {
-  doubleDigit,
+  calculateMissingTime,
   getDateString,
   isAlreadyLogedIn,
   persistData,
   purgeData,
   readData,
 } from "./helper.js";
-import ArgemService from "./Services/ArgemService.js";
-import figlet from "figlet";
 
-async function welcome() {
+async function mainPrompt() {
   console.log(figlet.textSync("Argem CLI ", { font: "Doom" }));
   console.log("\n");
 
   if (!isAlreadyLogedIn()) {
     await loginPrompt();
   }
-  const { timesheet, selectedDates } = await timeTablePropmt();
+  const { timesheet, selectedDates } = await timeTablePrompt();
 
-  const selectedActivity = await activityPropmpt();
+  const selectedActivity = await activityPrompt();
 
   const selectedProject = await projectPrompt();
 
-  await enterWorkLogPropmt(
+  await enterWorkLogPrompt(
     timesheet,
     selectedDates,
     selectedActivity,
@@ -66,6 +66,7 @@ async function loginPrompt() {
 
 async function reloginPrompt() {
   console.log("Tekrardan giriş yapılıyor");
+
   const { email, password } = readData();
   purgeData();
   ArgemService.init();
@@ -84,7 +85,7 @@ async function reloginPrompt() {
   ArgemService.init();
 }
 
-async function timeTablePropmt() {
+async function timeTablePrompt() {
   let timesheet = null;
   try {
     const {
@@ -94,7 +95,7 @@ async function timeTablePropmt() {
   } catch (error) {
     if (error.response.status === 401) {
       await reloginPrompt();
-      return await timeTablePropmt();
+      return await timeTablePrompt();
     }
   }
 
@@ -114,8 +115,8 @@ async function timeTablePropmt() {
       })),
     });
     if (!selectedDates.length) {
-      process.stdout.moveCursor(0, -1); // up one line
-      process.stdout.clearLine(1); // from cursor to end
+      process.stdout.moveCursor(0, -1);
+      process.stdout.clearLine(1);
       console.log(chalk.redBright("Hiçbir tarih seçmediniz!"));
     }
   }
@@ -123,7 +124,7 @@ async function timeTablePropmt() {
   return { timesheet, selectedDates };
 }
 
-async function activityPropmpt() {
+async function activityPrompt() {
   const {
     data: { data },
   } = await ArgemService.getActivities();
@@ -156,8 +157,9 @@ async function projectPrompt() {
   return selectedProject;
 }
 
-async function enterWorkLogPropmt(timesheets, dates, activity, project) {
-  console.log("\nArgem girişleriniz gerçekleştiriliyor.\n");
+async function enterWorkLogPrompt(timesheets, dates, activity, project) {
+  console.log("\nArgem girişleriniz gerçekleştiriliyor...\n");
+
   dates.forEach(async (id) => {
     const timesheet = timesheets.find((ts) => ts.id === id);
     const total_time = calculateMissingTime(timesheet.totaltime);
@@ -173,15 +175,4 @@ async function enterWorkLogPropmt(timesheets, dates, activity, project) {
   });
 }
 
-function calculateMissingTime(totalTime) {
-  const spendedHour = Number(totalTime.split(":")[0]);
-  const spendedMin = Number(totalTime.split(":")[1]);
-  const totalSpendedTime = spendedHour * 60 + spendedMin;
-  const missingTime = 60 * 8 - totalSpendedTime;
-
-  return `${doubleDigit(Math.floor(missingTime / 60))}:${doubleDigit(
-    missingTime % 60
-  )}`;
-}
-
-welcome();
+mainPrompt();

@@ -9,8 +9,8 @@
     "url": "https://github.com/gokayerim/argem-cli"
   },
   "scripts": {
-    "start": "node .",
-    "build": "rollup ./index.js -c",
+    "start": "node ./src/index.js",
+    "build": "rollup ./src/index.js -c",
     "deploy": "yarn build && yarn publish"
   },
   "bin": {

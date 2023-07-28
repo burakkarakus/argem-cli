@@ -64,3 +64,14 @@ export function getDateString(date) {
 export function doubleDigit(val) {
   return `00${val}`.slice(-2);
 }
+
+export function calculateMissingTime(totalTime) {
+  const spendedHour = Number(totalTime.split(":")[0]);
+  const spendedMin = Number(totalTime.split(":")[1]);
+  const totalSpendedTime = spendedHour * 60 + spendedMin;
+  const missingTime = 60 * 8 - totalSpendedTime;
+
+  return `${doubleDigit(Math.floor(missingTime / 60))}:${doubleDigit(
+    missingTime % 60
+  )}`;
+}

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { readData } from "../helper.js";
+import { readData } from "./helper.js";
 
 class ArgemService {
   constructor() {
