@@ -91,13 +91,13 @@ async function timeTablePrompt() {
     const {
       data: { data },
     } = await ArgemService.getTimeTable();
+    if (!data) throw new Error("Liste boş olamaz");
     timesheet = data?.filter((day, index) => !day.completed && index < 100);
   } catch (error) {
-    if (error.response.status === 401) {
-      await reloginPrompt();
-      return await timeTablePrompt();
-    }
+    await reloginPrompt();
+    return await timeTablePrompt();
   }
+
 
   if (!timesheet?.length) {
     console.log(chalk.greenBright("Eksik gününüz bulunmamaktadır 🎉🎉🎉\n"));
