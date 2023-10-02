@@ -11,8 +11,8 @@ export function isAlreadyLogedIn() {
 
   try {
     const data = fs.readFileSync(`${FOLDER_PATH}/${FILE_NAME}`, {
-      encoding: "utf8",
       flag: "r",
+      encoding: "utf8",
     });
     const { token, email, Cookie } = JSON.parse(data);
     return !!token && !!email && !!Cookie;
