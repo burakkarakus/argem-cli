@@ -40,8 +40,8 @@ async function loginPrompt() {
   console.log("Giriş yapmanız gerekiyor.");
 
   const { email } = await inquirer.prompt({
-    name: "email",
     type: "input",
+    name: "email",
     message: "E-mail adresi:",
   });
   const { password } = await inquirer.prompt({
