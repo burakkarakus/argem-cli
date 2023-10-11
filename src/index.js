@@ -123,7 +123,7 @@ async function enterWorkLogPrompt(timeSheets, project) {
       chalk.greenBright(
         `${getDateString(
           sheet.date
-        )} günü için mesai girişi tamamlandı. Girilen toplam mesai süresi: ${missingTime}`
+        )} günü için mesai girişi tamamlandı. Girilen toplam mesai süresi: ${missingTime}!`
       )
     );
   });
