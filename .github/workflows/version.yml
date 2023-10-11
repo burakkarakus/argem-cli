@@ -13,5 +13,5 @@ jobs:
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - run: git config --global user.name 'Gökay Erim'
       - run: git config --global user.email 'gokayerim@gmail.com'
-      - run: npm version major -m "[RELEASE] %s"
+      - run: npm version patch -m "[RELEASE] %s"
       - run: git push

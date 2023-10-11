@@ -109,7 +109,6 @@ async function enterWorkLogPrompt(timeSheets, project) {
     data: { data },
   } = await ArgemService.getProjects();
   const activity = data.find((d) => d.value.toLowerCase().includes("covid"));
-  console.log(activity);
 
   timeSheets.forEach(async (sheet) => {
     const missingTime = calculateMissingTime(sheet.totalTime);
