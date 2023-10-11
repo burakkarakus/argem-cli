@@ -70,6 +70,11 @@
   resolved "https://registry.npmjs.org/@inquirer/type/-/type-1.1.1.tgz"
   integrity sha512-ACc2N1AnIYtg+bfnitna0OJ1rptWqa8apdDDRQnRWb0R5MEPGAgvqWaDbZahATXOnglqKDRIeHFEQfqxhM6p/g==
 
+"@ljharb/through@^2.3.10":
+  version "2.3.10"
+  resolved "https://registry.yarnpkg.com/@ljharb/through/-/through-2.3.10.tgz#f95970e34d54125b50d0a17397e6c861e60a5881"
+  integrity sha512-NwkQ4+jf4tMpDSlRc1wlttHnC7KfII+SjdqDEwEuQ7W0IaTK5Ab1jxCJrH6pYsLbLXiQgRn+nFQsGmKowbAKkA==
+
 "@types/mute-stream@^0.0.1":
   version "0.0.1"
   resolved "https://registry.npmjs.org/@types/mute-stream/-/mute-stream-0.0.1.tgz"
