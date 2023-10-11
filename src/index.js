@@ -12,7 +12,6 @@ import {
   isAlreadyLogedIn,
   persistData,
   purgeData,
-  readData,
 } from "./helper.js";
 
 async function mainPrompt() {
@@ -22,65 +21,26 @@ async function mainPrompt() {
   if (!isAlreadyLogedIn()) {
     await loginPrompt();
   }
-  const { timesheet, selectedDates } = await timeTablePrompt();
+  const selecetedSheets = await timeTablePrompt();
 
-  const selectedActivity = await activityPrompt();
-
-  const selectedProject = await projectPrompt();
-
-  await enterWorkLogPrompt(
-    timesheet,
-    selectedDates,
-    selectedActivity,
-    selectedProject
+  const selectedActivity = await activityPrompt(
+    selecetedSheets[0].date,
+    selecetedSheets[0].id
   );
+
+  await enterWorkLogPrompt(selecetedSheets, selectedActivity);
 }
 
 async function loginPrompt() {
   console.log("Giriş yapmanız gerekiyor.");
 
-  const { email } = await inquirer.prompt({
+  const { token } = await inquirer.prompt({
     type: "input",
-    name: "email",
-    message: "E-mail adresi:",
+    name: "token",
+    message: "Lütfen next-auth.session-token isimli cookie'yi giriniz:",
   });
-  const { password } = await inquirer.prompt({
-    name: "password",
-    type: "password",
-    message: "Şifre:",
-  });
-
-  const {
-    data: { token },
-    headers,
-  } = await ArgemService.login(email, password);
-
   persistData({
     token,
-    Cookie: headers["set-cookie"]?.join(";"),
-    email,
-    password,
-  });
-  ArgemService.init();
-}
-
-async function reloginPrompt() {
-  console.log("Tekrardan giriş yapılıyor");
-
-  const { email, password } = readData();
-  purgeData();
-  ArgemService.init();
-
-  const {
-    data: { token },
-    headers,
-  } = await ArgemService.login(email, password);
-
-  persistData({
-    token,
-    Cookie: headers["set-cookie"]?.join(";"),
-    email,
-    password,
   });
   ArgemService.init();
 }
@@ -92,12 +52,15 @@ async function timeTablePrompt() {
       data: { data },
     } = await ArgemService.getTimeTable();
     if (!data) throw new Error("Liste boş olamaz");
-    timesheet = data?.filter((day, index) => !day.completed && index < 100);
+    timesheet = data?.rows?.filter(
+      (day, index) => !day.completed && index < 100 && index > 0
+    );
   } catch (error) {
-    await reloginPrompt();
+    purgeData();
+    console.log("Token expired olmuş olabilir.");
+    await loginPrompt();
     return await timeTablePrompt();
   }
-
 
   if (!timesheet?.length) {
     console.log(chalk.greenBright("Eksik gününüz bulunmamaktadır 🎉🎉🎉\n"));
@@ -120,56 +83,48 @@ async function timeTablePrompt() {
       console.log(chalk.redBright("Hiçbir tarih seçmediniz!"));
     }
   }
-
-  return { timesheet, selectedDates };
+  return timesheet.filter((sheet) => selectedDates.includes(sheet.id));
 }
 
-async function activityPrompt() {
+async function activityPrompt(date, wid) {
   const {
     data: { data },
-  } = await ArgemService.getActivities();
-  const acvities = data?.filter((activity) => activity.item_status === 1);
+  } = await ArgemService.getActivities(date, wid);
 
   const selectedActivity = await select({
     message: "Aktivite seçiniz: ",
-    choices: acvities.map((activity) => ({
-      name: activity.label,
-      value: activity.key,
+    choices: data.map((activity) => ({
+      name: activity.name,
+      value: activity.id,
     })),
   });
 
   return selectedActivity;
 }
 
-async function projectPrompt() {
+async function enterWorkLogPrompt(timeSheets, project) {
+  console.log("\nArgem girişleriniz gerçekleştiriliyor...\n");
+
   const {
     data: { data },
   } = await ArgemService.getProjects();
+  const activity = data.find((d) => d.value.toLowerCase().includes("covid"));
+  console.log(activity);
 
-  const selectedProject = await select({
-    message: "Projenizi seçiniz: ",
-    choices: data.map((activity) => ({
-      name: activity.label,
-      value: activity.key,
-    })),
-  });
-
-  return selectedProject;
-}
-
-async function enterWorkLogPrompt(timesheets, dates, activity, project) {
-  console.log("\nArgem girişleriniz gerçekleştiriliyor...\n");
-
-  dates.forEach(async (id) => {
-    const timesheet = timesheets.find((ts) => ts.id === id);
-    const total_time = calculateMissingTime(timesheet.totaltime);
-
-    await ArgemService.enterWorklog(id, activity, project, total_time);
+  timeSheets.forEach(async (sheet) => {
+    const missingTime = calculateMissingTime(sheet.totalTime);
+    await ArgemService.enterWorklog(
+      sheet.id,
+      sheet.date,
+      activity.id,
+      project,
+      missingTime
+    );
     console.log(
       chalk.greenBright(
         `${getDateString(
-          timesheet.date
-        )} günü için mesai girişi tamamlandı. Girilen toplam mesai süresi: ${total_time}`
+          sheet.date
+        )} günü için mesai girişi tamamlandı. Girilen toplam mesai süresi: ${missingTime}`
       )
     );
   });

@@ -14,8 +14,8 @@ export function isAlreadyLogedIn() {
       flag: "r",
       encoding: "utf8",
     });
-    const { token, email, Cookie } = JSON.parse(data);
-    return !!token && !!email && !!Cookie;
+    const { token } = JSON.parse(data);
+    return !!token;
   } catch (error) {
     return false;
   }

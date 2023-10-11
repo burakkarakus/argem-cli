@@ -8,62 +8,51 @@ class ArgemService {
   }
 
   init = () => {
-    const data = readData();
-    this.instance = null;
+    try {
+      const { token } = readData();
+      this.instance = null;
 
-    this.instance = axios.create({
-      headers: {
-        Authorization: `Bearer ${data?.token}`,
-        Cookie: data?.Cookie,
-      },
-      validateStatus: (status) =>
-        status >= 200 && status <= 500 && status !== 401 && status !== 400,
-      baseURL: this.baseURL,
-    });
-  };
-
-  login = (email, password) => {
-    return this.instance.post("/auth/sign_in", { email, password });
+      this.instance = axios.create({
+        headers: {
+          Cookie: `next-auth.session-token=${token}`,
+        },
+        validateStatus: (status) =>
+          status >= 200 && status <= 500 && status !== 401 && status !== 400,
+        baseURL: this.baseURL,
+      });
+    } catch (error) {}
   };
 
   getTimeTable = () => {
-    return this.instance.post("/", {
-      query: "GetAllPersonalWorklogs",
-      payload: { filter: [], sorting: [] },
+    return this.instance.get("/worklogs", {
+      params: { type: "user", page: 1 },
     });
   };
 
-  getActivities = () => {
-    return this.instance.post("/", {
-      query: "ActivitySelectList",
-      payload: { label: "", wid: "" },
+  getActivities = (date, wid) => {
+    return this.instance.get("/worklogs/projects", {
+      params: {
+        wid,
+        date: date.substring(0, 10),
+      },
     });
   };
 
   getProjects = () => {
-    return this.instance.post("/", {
-      query: "ProjectSelectListByTeam",
-      payload: { label: "2023-07-19", wid: 966406 },
-    });
+    return this.instance.get("/lookups");
   };
 
-  enterWorklog = (id, activity, project, total_time) => {
-    return this.instance.post("/", {
-      query: "updateWorklogDetail",
-      payload: {
-        data: [
-          {
-            item_status: "1",
-            activity,
-            project,
-            holiday: null,
-            total_time,
-            statement: null,
-          },
-        ],
-        id,
+  enterWorklog = (wid, date, activity, project, time) => {
+    return this.instance.post(
+      "/worklogs",
+      {
+        activity,
+        project,
+        time,
+        type: "OUTSIDE",
       },
-    });
+      { params: { wid, date: date.substring(0, 10) } }
+    );
   };
 }
 
