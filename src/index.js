@@ -34,13 +34,13 @@ async function mainPrompt() {
 async function loginPrompt() {
   console.log("Giriş yapmanız gerekiyor.");
 
-  const { token } = await inquirer.prompt({
+  const { authToken } = await inquirer.prompt({
     type: "input",
-    name: "token",
+    name: "authToken",
     message: "Lütfen next-auth.session-token isimli cookie'yi giriniz:",
   });
   persistData({
-    token,
+    authToken,
   });
   ArgemService.init();
 }
@@ -57,7 +57,7 @@ async function timeTablePrompt() {
     );
   } catch (error) {
     purgeData();
-    console.log("Token expired olmuş olabilir.");
+    console.log(chalk.red("next-auth.session-token expired olmuş olabilir."));
     await loginPrompt();
     return await timeTablePrompt();
   }

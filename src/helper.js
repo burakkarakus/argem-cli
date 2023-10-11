@@ -14,8 +14,8 @@ export function isAlreadyLogedIn() {
       flag: "r",
       encoding: "utf8",
     });
-    const { token } = JSON.parse(data);
-    return !!token;
+    const { authToken } = JSON.parse(data);
+    return !!authToken;
   } catch (error) {
     return false;
   }

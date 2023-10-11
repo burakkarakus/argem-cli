@@ -9,12 +9,12 @@ class ArgemService {
 
   init = () => {
     try {
-      const { token } = readData();
+      const { authToken } = readData();
       this.instance = null;
 
       this.instance = axios.create({
         headers: {
-          Cookie: `next-auth.session-token=${token}`,
+          Cookie: `next-auth.session-token=${authToken}`,
         },
         validateStatus: (status) =>
           status >= 200 && status <= 500 && status !== 401 && status !== 400,
