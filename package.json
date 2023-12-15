@@ -6,7 +6,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/gokayerim/argem-cli"
+    "url": "https://github.com/burakkarakus/argem-cli"
   },
   "scripts": {
     "start": "node ./src/index.js",
